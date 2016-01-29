@@ -3,9 +3,10 @@
 	<meta charset="UTF-8">
 	<head>
 		<script type="text/javascript" src="js/mqttws31.js"></script>
+        <script type="text/javascript" src="js/canvasjs.min.js"></script>
 	</head>
 	<body>
-		<h2>MQTT demo for iLab2</h2> 
+		<h2>BINSMART MQTT Test Tool</h2> 
 		<button onclick="connect()">
 			Connect to the Broker
 		</button>
@@ -16,7 +17,7 @@
 		<button onclick="publish()">
 			Publish
 		</button>
-		<br>
+		
 		<h3>Subscribe to a topic</h3> Topic:
 		<input type="text" name = "sub"/>
 		<button onclick="subscribe()">
@@ -25,9 +26,15 @@
 		<button onclick="unsubscribe()">
 			UnSubscribe
 		</button>
-		<br>
-		<p id="sub"></p>
-		<script>
+        <p id="sub">Received message: </p>
+
+        <p id="ussensor1">Reading from sensor 1: </p>
+        <p id="ussensor2">Reading from sensor 2: </p>
+        <div id="chartContainer" style="height: 450px; width: 100;">
+        </div>
+        <script>
+            var uss1CurrentReading = 0;
+            var uss2CurrentReading = 0;
 			function connect() {
 				clientPublish = new Paho.MQTT.Client("192.168.178.34", 9001, "myClientId666");
 				clientPublish.connect({
@@ -82,11 +89,103 @@
 
 				// called when a message arrives
 				function onMessageArrived(message) {
-					console.log("message is received" + message.payloadString);
-					document.getElementById("sub").innerHTML = message.payloadString;
+					console.log("message received: " + message.payloadString);
+					document.getElementById("sub").innerHTML = "Received message: " + message.payloadString;
+                    parseSubscribedMessage(message.payloadString);
 				}
 
 			}
+        
+            function parseSubscribedMessage(input) {
+                //alert(input);
+                res=input.split(":");
+                //alert("res[0]--->" + res[0]),
+                if (res[0] == "uss1") {
+                    document.getElementById("ussensor1").innerHTML = "Reading from sensor 1: " + res[1] + " inches";
+                    uss1CurrentReading = parseInt(res[1]);
+                    //alert(uss1CurrentReading);
+                }
+                
+                if (res[0] == "uss2") {
+                    document.getElementById("ussensor2").innerHTML = "Reading from sensor 2: " + res[1] + " inches";
+                    uss2CurrentReading = parseInt(res[1]);
+                    //alert(uss2CurrentReading);
+                }
+            }
+        
+        window.onload = function () {
+            
+            //initial value of dataPoints
+            var dps = [
+                       {label: "Bin1", y: 206},
+                       {label: "Bin2", y: 163}
+                       ];
+                       
+                       var chart = new CanvasJS.Chart("chartContainer",{
+                                                      title: {
+                                                      text: "State of Each Garbage Bin"
+                                                      },
+                                                      axisY: {
+                                                      suffix: " %"
+                                                      },
+                                                      legend :{
+                                                      verticalAlign: 'bottom',
+                                                      horizontalAlign: "center"
+                                                      },
+                                                      data: [
+                                                             {
+                                                             type: "column",
+                                                             bevelEnabled: true,				
+                                                             indexLabel: "{y} %",
+                                                             dataPoints: dps					
+                                                             }
+                                                             ]
+                                                      });
+                                                      
+                                                      
+                                                      var updateInterval = 1000;	
+                                                      
+                                                      
+                                                      var updateChart = function () {
+                                                          
+                                                          for (var i = 0; i < dps.length; i++) {
+                                                              
+                                                              // generating random variation deltaY
+                                                              
+                                                              var yVal =
+                                                              i == 0 ? uss1CurrentReading:
+                                                              i == 1 ? uss2CurrentReading:
+                                                              null;
+                                                              
+                                                              var boilerColor;
+                                                              
+                                                              
+                                                              // color of dataPoint dependent upon y value. 
+                                                              
+                                                              boilerColor =
+                                                              yVal > 75 ? "#FF2500":
+                                                              yVal >= 30 ? "#FF6000":
+                                                              yVal < 30 ? "#6B8E23 ":
+                                                              null;
+                                                              
+                                                              
+                                                              // updating the dataPoint
+                                                              dps[i] = {label: "Bin"+(i+1) , y: yVal, color: boilerColor};
+                                                              
+                                                          };
+                                                          
+                                                          chart.render();
+                                                      };
+                                                      
+                                                      updateChart();		
+                                                      
+                                                      // update chart after specified interval 
+                                                      setInterval(function(){updateChart()}, updateInterval);
+                                                      
+                                                      
+        }
+        
+
 		</script>
 	</body>
 </html>
