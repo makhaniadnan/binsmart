@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+	<meta charset="UTF-8">
+	<head>
+		<script type="text/javascript" src="js/mqttws31.js"></script>
+	</head>
+	<body>
+		<h2>MQTT demo for iLab2</h2> 
+		<button onclick="connect()">
+			Connect to the Broker
+		</button>
+		<h3>Publish message under a topic</h3> Topic :
+		<input type="text" name = "pub"/>
+		Message:
+		<input type="text" name ="pub"/>
+		<button onclick="publish()">
+			Publish
+		</button>
+		<br>
+		<h3>Subscribe to a topic</h3> Topic:
+		<input type="text" name = "sub"/>
+		<button onclick="subscribe()">
+			Subscribe
+		</button>
+		<button onclick="unsubscribe()">
+			UnSubscribe
+		</button>
+		<br>
+		<p id="sub"></p>
+		<script>
+			function connect() {
+				clientPublish = new Paho.MQTT.Client("192.168.178.34", 9001, "myClientId666");
+				clientPublish.connect({
+					
+					onSuccess : onConnect
+				});
+				function onConnect() {
+					console.log("connection successful");
+				}
+
+			}
+
+			function publish() {
+				var topic = document.getElementsByName("pub")[0].value;
+				var messageToPublish = document.getElementsByName("pub")[1].value;
+				// Once a connection has been made, make a subscription and send a message.
+				console.log("Trying to publish");
+				message = new Paho.MQTT.Message(messageToPublish);
+				message.destinationName = topic;
+				clientPublish.send(message);
+
+			}
+			function unsubscribe() {
+				topic = document.getElementsByName("sub")[0].value;
+				clientPublish.unsubscribe(topic);
+				alert("unsubcribed from the topic");
+				
+			}
+
+			function subscribe() {
+				clientPublish.onMessageArrived = onMessageArrived;
+				var TopicToSubscribe = document.getElementsByName("sub")[0].value;
+				// Once a connection has been made, make a subscription and send a message.
+				console.log("Trying to subscribe");
+				clientPublish.subscribe(TopicToSubscribe);
+				console.log("successfuly subscribed to the topic");
+				function onConnect() {
+					var TopicToSubscribe = document.getElementsByName("sub")[0].value;
+					// Once a connection has been made, make a subscription and send a message.
+					console.log("Trying to subscribe");
+					clientPublish.subscribe(TopicToSubscribe);
+					console.log("successfuly subscribed to the topic");
+				}
+
+				// called when the client loses its connection
+				function onConnectionLost(responseObject) {
+					if (responseObject.errorCode !== 0) {
+						console.log("onConnectionLost:" + responseObject.errorMessage);
+						//setTimeout(function() { clientSubcribe.connect() }, 5000);
+					}
+				}
+
+				// called when a message arrives
+				function onMessageArrived(message) {
+					console.log("message is received" + message.payloadString);
+					document.getElementById("sub").innerHTML = message.payloadString;
+				}
+
+			}
+		</script>
+	</body>
+</html>
