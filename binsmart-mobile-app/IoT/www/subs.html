@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>connection page</title>
+		<script type="text/javascript" src="js/mqttws31.js"></script>
+
+
+	</head>
+	<p id = "id"></p>
+	<p id = "id1"></p>
+	Sub:
+	<input type="text" name="Bluetooth"> </input> <button onclick="connectionMQTTSub()">ConnetToMQTTSub</button><br>
+	Pub:
+	<input type="text" name="Bluetooth"> </input>
+		
+	<button onclick="connectionMQTTPub()">ConnetToMQTTPub</button>	
+	<p id ="message"></p>
+	
+	<script>
+		function connectionMQTTSub() {
+		
+		bluetooth = document.getElementsByName("Bluetooth")[0].value;
+		console.log(typeof(bluetooth));
+		document.getElementById("id").innerHTML = bluetooth;
+		document.getElementById("id1").innerHTML = "success";
+		
+			// Create a client instance
+		
+
+		client = new Paho.MQTT.Client("ws://iot.eclipse.org/ws", "myClientId" + new Date().getTime());
+		client.onConnectionLost = onConnectionLost;
+		
+		
+		// connect the client
+		client.connect({onSuccess:onConnect});
+		client.onMessageArrived = onMessageArrived;
+		// called when the client loses its connection
+		function onConnectionLost(responseObject) {
+		  if (responseObject.errorCode !== 0) {
+		    console.log("onConnectionLost:"+responseObject.errorMessage);
+		  }
+		}
+		
+		// called when a message arrives
+		function onMessageArrived(message) {
+		  console.log("onMessageArrived:"+message.payloadString);
+		  val = "";
+		 val = document.getElementById("message").innerHTML+ '\r\n';
+		  val+=message.payloadString;
+		  document.getElementById("message").innerHTML = val;
+		}
+		function onConnect() {
+		  // Once a connection has been made, make a subscription and send a message.
+		  console.log("onConnect");
+		  client.subscribe(bluetooth);
+		  console.log("successss");
+ 		}
+		
+		
+	}
+	function connectionMQTTPub(){
+		publish = document.getElementsByName("Bluetooth")[1].value;
+		client_pub = new Paho.MQTT.Client("ws://iot.eclipse.org/ws", "myClientId1" + new Date().getTime());
+		console.log("trying to connect");
+	
+		// set callback handlers
+		
+		client_pub.connect({onSuccess:onConnect1});
+		
+		// called when the client connects
+		function onConnect1() {
+		  // Once a connection has been made, make a subscription and send a message.
+		  console.log("onConnect1");
+		  //client.subscribe("/World");
+		  message1 = new Paho.MQTT.Message("a");
+		  message1.destinationName = publish;
+		  message1.retained = true;
+		  message1.qos = 2;
+		  message2 = new Paho.MQTT.Message("b");
+		  
+		 message2.destinationName = publish;
+		 message2.retained = true;
+		  message2.qos = 2;
+		  message3 = new Paho.MQTT.Message("c");
+			message3.retained = true;
+		  message3.qos = 2;
+		  message3.destinationName = publish;
+		  client_pub.send(message1);
+		  client_pub.send(message2);
+		  client_pub.send(message3); 
+		}
+		
+		
+	}
+	</script>
+</html>

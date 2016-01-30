@@ -1,0 +1,42 @@
+{
+    "cordova-plugin-whitelist": {
+        "source": {
+            "type": "registry",
+            "id": "cordova-plugin-whitelist@1"
+        },
+        "is_top_level": true,
+        "variables": {}
+    },
+    "com.matd.coolplugin": {
+        "source": {
+            "type": "local",
+            "path": "C:\\Users\\ankur\\CoolPlugin"
+        },
+        "is_top_level": true,
+        "variables": {}
+    },
+    "de.tum.in.cordova": {
+        "source": {
+            "type": "local",
+            "path": "C:\\plugins\\MqttPlugin"
+        },
+        "is_top_level": true,
+        "variables": {}
+    },
+    "io.litehelpers.cordova.sqlite": {
+        "source": {
+            "type": "registry",
+            "id": "cordova-sqlite-storage"
+        },
+        "is_top_level": true,
+        "variables": {}
+    },
+    "cordova-plugin-dialogs": {
+        "source": {
+            "type": "registry",
+            "id": "cordova-plugin-dialogs"
+        },
+        "is_top_level": true,
+        "variables": {}
+    }
+}

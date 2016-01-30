@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+
+<!-- Welcome screen
+     This screen is loaded the first time user starts the app
+
+     The app tries to connect to the local mosquitto broker
+     through eclipse paho library
+
+     If the connection is successful then the user can go to the next
+     screen to check the status of the remote Garbage Bins. If not, then
+     user is redirected to another screen where he can modify the broker
+     parameters
+-->
+
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+     KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+<html>
+<head>
+    <!--
+    Customize this policy to fit your own app's needs. For more guidance, see:
+        https://github.com/apache/cordova-plugin-whitelist/blob/master/README.md#content-security-policy
+    Some notes:
+        * gap: is required only on iOS (when using UIWebView) and is needed for JS->native communication
+        * https://ssl.gstatic.com is required only on Android and is needed for TalkBack to function properly
+        * Disables use of inline scripts in order to mitigate risk of XSS vulnerabilities. To change this:
+            * Enable inline JS: add 'unsafe-inline' to default-src
+    -->
+    <meta name="format-detection" content="telephone=no">
+    <meta name="msapplication-tap-highlight" content="no">
+    <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width">
+    <link href="lib/ionic/css/ionic.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="css/index.css">
+    <title>Binsmart 1.0</title>
+    <script type="text/javascript" src="cordova.js"></script>
+    <script type="text/javascript" src="cordova_plugins.js"></script>
+    <script type="text/javascript" src="js/mqttws31.js"></script>
+    <script type="text/javascript" src="js/index.js"></script>
+
+</head>
+
+<body onload="construct()">
+
+<script>
+
+    var randomClient = "";
+    var len1 = 0;
+    var len2 = 0;
+
+    // Call this function when the app loads
+    function onDeviceReady() {
+	    // Use SQLite to open the myanother database
+	    var db = window.sqlitePlugin.openDatabase({name: "myanother.db"});
+
+        // Create the threshold_table if it does not exist
+	    db.transaction(function(tx) {
+            tx.executeSql('DROP TABLE IF EXISTS threshold_table');
+            tx.executeSql('CREATE TABLE IF NOT EXISTS threshold_table (id integer primary key, threshUSS1 text, threshUSS2 text)');
+
+            // demonstrate PRAGMA:
+            db.executeSql("pragma table_info (threshold_table);", [], function(res) {
+                console.log("PRAGMA res: " + JSON.stringify(res));
+            });
+
+            // Insert default threshold values in the threshold_table through SQLite query
+            tx.executeSql("select * from threshold_table;", [], function(tx, res) {
+                len2 = res.rows.length;
+                if (len2 == 0) {
+                    tx.executeSql("INSERT INTO threshold_table (threshUSS1, threshUSS2) VALUES (?,?)", ["100", "100"], function(tx, res) {});
+                }
+            });
+        },
+
+        function() {
+            console.log('transaction ok');
+            db.close(function() {
+                console.log('database is closed ok');
+            });
+        },
+
+        // Error handler
+        function(e) {
+            console.log("ERROR: " + e.message);
+            db.close();
+        });
+
+        // Create the mqtt_table if it does not exist
+        db.transaction(function(tx) {
+
+            //tx.executeSql('DROP TABLE IF EXISTS mqtt_table');
+            tx.executeSql('CREATE TABLE IF NOT EXISTS mqtt_table (id integer primary key, host text, port integer, client_Id text, user_Name, pwd text)');
+
+            // demonstrate PRAGMA:
+            db.executeSql("pragma table_info (mqtt_table);", [], function(res) {
+                console.log("PRAGMA res: " + JSON.stringify(res));
+            });
+
+            // Insert default values for the MQTT connection parameters in the mqtt_table
+            tx.executeSql("select * from mqtt_table;", [], function(tx, res) {
+                len1 = res.rows.length;
+                if (len1 == 0) {
+                    genRandom();
+                    tx.executeSql("INSERT INTO mqtt_table (host, port, client_Id, user_Name, pwd) VALUES (?,?,?,?,?)", ["192.168.178.34", 9001, randomClient, "user@email.com", "iotiwbiot"], function(tx, res) {});
+                }
+            });
+
+            // Load the MQTT connection parameter values in local variables and use them later
+            db.transaction(function(tx) {
+                tx.executeSql("select * from mqtt_table;", [], function(tx, res) {
+                    var len = res.rows.length;
+                    for (var i=0; i<len; i++) {
+                        var newParagraph = document.createElement('p');
+                        newParagraph.textContent = res.rows.item(i).host;
+                        host = res.rows.item(i).host
+                        port = res.rows.item(i).port
+                        clientId = res.rows.item(i).client_Id
+                        userName = res.rows.item(i).user_Name
+                        password = res.rows.item(i).pwd
+                    }
+                });
+            });
+
+        },
+
+        function() {
+            console.log('transaction ok');
+            db.close(function() {
+                console.log('database is closed ok');
+            });
+        },
+
+        // Error Handler
+        function(e) {
+            console.log("ERROR: " + e.message);
+            db.close();
+        });
+    }
+
+    // Set the MQTT connection parameters by taking values from the local variables
+    function SetMQTT() {
+        MqttPlugin.setMQTT({
+            url: host,
+            port: port,
+            clientid: clientId,
+            username: userName,
+            password: password
+        });
+    }
+
+    // Check for the heartbeat
+    function connect() {
+				clientPublish = new Paho.MQTT.Client(host, port, clientId);
+				clientPublish.connect({
+
+					onSuccess : onConnect
+				});
+				function onConnect() {
+					console.log("connection successful");
+					document.getElementById("pi_status").innerHTML = "Connection Successful. Press the button to continue.";
+					document.getElementById("start").getElementsByClassName("button")[0].removeAttribute("disabled"),
+                    document.getElementById("start").getElementsByClassName("button")[0].className="button button-clear button-balanced button-large ion-unlocked"
+
+				}
+
+			}
+
+	function InitFunc() {
+		document.getElementById("pi_status").innerHTML = "Connecting to Message Broker. Please Wait.";
+	}
+
+    /* Call this function if the MQTT connection is not successful
+       after 30 seconds and take the user to the Settings screen
+    */
+    function checkTimeOut() {
+        if (document.getElementById("pi_status").innerHTML == "Connecting to Message Broker. Please Wait.") {
+            alert("Check your internet connection or MQTT settings");
+            window.location.href = "settings_for_first_page.html";
+        }
+    }
+
+    // Call this function when the app loads
+    function construct() {
+        setTimeout(onDeviceReady, 1500);
+        setTimeout(InitFunc, 2500);
+        //setTimeout(SetMQTT, 2500);
+        setTimeout(connect, 3500);
+        setTimeout(checkTimeOut, 30000);
+    }
+
+    // Generate random Client Id for the MQTT connection
+    function genRandom() {
+        randomClient = Math.random().toString(36).substring(7);
+	}
+
+</script>
+
+<div id="start">
+    <a href="ui.html" class="button button-clear button-assertive button-large ion-locked" disabled></a>
+</div>
+
+<div id ="status_ui">
+    <p id ="pi_status"> Initializing connection with the Broker....</p>
+</div>
+
+</body>
+</html>
