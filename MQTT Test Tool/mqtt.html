@@ -6,11 +6,16 @@
         <script type="text/javascript" src="js/canvasjs.min.js"></script>
 	</head>
 	<body>
-		<h2>BINSMART MQTT Test Tool</h2> 
-		<button onclick="connect()">
-			Connect to the Broker
+		<h2>BinSmart MQTT Test Tool</h2>
+        <h3>Connect to the message broker</h3> IP Address of the broker :
+        <input type="text" name = "brokerip"/>
+        Port
+        <input type="text" name = "port"/>
+        <button onclick="connect()">
+			Connect
 		</button>
-		<h3>Publish message under a topic</h3> Topic :
+		
+        <h3>Publish message under a topic</h3> Topic :
 		<input type="text" name = "pub"/>
 		Message:
 		<input type="text" name ="pub"/>
@@ -26,17 +31,19 @@
 		<button onclick="unsubscribe()">
 			UnSubscribe
 		</button>
+        
         <p id="sub">Received message: </p>
-
         <p id="ussensor1">Reading from sensor 1: </p>
         <p id="ussensor2">Reading from sensor 2: </p>
-        <div id="chartContainer" style="height: 450px; width: 100;">
+        <div id="chartContainer" style="height: 400px; width: 100;">
         </div>
         <script>
             var uss1CurrentReading = 0;
             var uss2CurrentReading = 0;
 			function connect() {
-				clientPublish = new Paho.MQTT.Client("131.159.198.160", 9001, "myClientId666");
+                var brokerIP = document.getElementsByName("brokerip")[0].value;
+                var brokerPort = parseInt(document.getElementsByName("port")[0].value);
+                clientPublish = new Paho.MQTT.Client(brokerIP, brokerPort, "myClientId666");
 				clientPublish.connect({
 					
 					onSuccess : onConnect
@@ -123,10 +130,10 @@
                        
                        var chart = new CanvasJS.Chart("chartContainer",{
                                                       title: {
-                                                      text: "State of Each Garbage Bin"
+                                                      text: "Sensor Reading from the Smart Garbage Bins"
                                                       },
                                                       axisY: {
-                                                      suffix: " %"
+                                                      suffix: " inches"
                                                       },
                                                       legend :{
                                                       verticalAlign: 'bottom',
@@ -136,7 +143,7 @@
                                                              {
                                                              type: "column",
                                                              bevelEnabled: true,				
-                                                             indexLabel: "{y} %",
+                                                             indexLabel: "{y} inches",
                                                              dataPoints: dps					
                                                              }
                                                              ]
@@ -163,9 +170,13 @@
                                                               // color of dataPoint dependent upon y value. 
                                                               
                                                               boilerColor =
-                                                              yVal > 75 ? "#FF2500":
-                                                              yVal >= 30 ? "#FF6000":
-                                                              yVal < 30 ? "#6B8E23 ":
+                                                              yVal > 95 ? "#FF1A00":
+                                                              yVal >= 90 ? "#FF5F16":
+                                                              yVal >= 80 ? "#EB9E23":
+                                                              yVal >= 60 ? "#FFDD00":
+                                                              yVal >= 40 ? "#0C6600":
+                                                              yVal >= 20 ? "#129800":
+                                                              yVal < 20 ? "#1EFF00 ":
                                                               null;
                                                               
                                                               

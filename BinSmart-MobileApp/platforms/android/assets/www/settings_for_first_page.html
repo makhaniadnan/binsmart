@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+
+
+<!-- HTML page for Settings screen: contains HTML and JavaScript codes
+     User can be directed to this page from
+     the Welcome screen in case the MQTT connection is not successful
+
+     User can navigate to
+     the Welcome screen
+-->
+
+<html>
+<meta charset="UTF-8">
+
+<head>
+
+    <script type="text/javascript" src="cordova.js"></script>
+    <script type="text/javascript" src="cordova_plugins.js"></script>
+    <link href="lib/ionic/css/ionic.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="css/wifi.css">
+
+</head>
+
+<body>
+<div class="bar bar-header bar-dark">
+
+    <a href = "index.html"><button class="button button-clear button-light ion-android-arrow-back"></button></a>
+    <h1 class="title">MQTT Settings</h1>
+
+</div>
+
+<br>
+<br>
+<br>
+
+<div class="list card">
+
+    <a href="#" class="item item-icon-left">
+        <i class="icon ion-cloud" onclick="updateHost()"></i>
+        Enter Host Address
+    </a>
+
+    <a href="#" class="item item-icon-left">
+        <i class="icon ion-usb" onclick="updatePort()"></i>
+        Enter Port Number
+    </a>
+
+    <a href="#" class="item item-icon-left">
+        <i class="icon ion-android-person" onclick="updateClient()"></i>
+        Enter Client Id
+    </a>
+
+    <a href="#" class="item item-icon-left">
+        <i class="icon ion-email" onclick="updateUser()"></i>
+        Enter Username
+    </a>
+
+    <a href="#" class="item item-icon-left">
+        <i class="icon ion-key" onclick="updatePassword()"></i>
+        Enter Password
+    </a>
+
+</div>
+
+<div class="list">
+    <a href="index.html">
+
+        <button class="button button-block button-dark">
+            Reconnect
+        </button>
+
+
+    </a>
+
+
+</div>
+
+
+<script>
+
+    var numbers = /^[0-9]+$/;
+
+    // Through SQLite query, the Host Name field is updated in the MQTT table
+    function updateHost(){
+
+        var hostName=prompt("Please enter the host name","");
+        if (hostName!=null) {
+            var db = window.sqlitePlugin.openDatabase({name: "myanother.db"});
+            db.transaction(function(tx) {
+                tx.executeSql("UPDATE mqtt_table SET host=? where id=1;", [hostName], function(tx, res) {
+                len1 = res.rows.length;
+                //alert(hostName);
+                });
+            },
+            function() {
+                console.log('transaction ok');
+                db.close(function() {
+                console.log('database is closed ok');
+                });
+            },
+            function(e) {
+                console.log("ERROR: " + e.message);
+                db.close();
+            });
+        };
+    }
+
+    // Through SQLite query, the Port Number field is updated in the MQTT table
+    function updatePort(){
+
+        var portNumber=prompt("Please enter the port number","");
+        //check if the input is numeric
+        if (!portNumber.match(numbers)) {
+            alert('Port number should be numeric');
+            return false;
+        };
+
+        if (portNumber!=null) {
+            var db = window.sqlitePlugin.openDatabase({name: "myanother.db"});
+            db.transaction(function(tx) {
+                tx.executeSql("UPDATE mqtt_table SET port=? where id=1;", [portNumber], function(tx, res) {
+                len1 = res.rows.length;
+                //alert(portNumber);
+                });
+            },
+            function() {
+                console.log('transaction ok');
+                db.close(function() {
+                console.log('database is closed ok');
+                });
+            },
+            function(e) {
+                console.log("ERROR: " + e.message);
+                db.close();
+            });
+        };
+    }
+
+    // Through SQLite query, the Client ID field is updated in the MQTT table
+    function updateClient(){
+
+        var clientId=prompt("Please enter the client id","");
+        if (clientId!=null) {
+            var db = window.sqlitePlugin.openDatabase({name: "myanother.db"});
+            db.transaction(function(tx) {
+                tx.executeSql("UPDATE mqtt_table SET client_Id=? where id=1;", [clientId], function(tx, res) {
+                len1 = res.rows.length;
+                //alert(clientId);
+                });
+            },
+            function() {
+                console.log('transaction ok');
+                db.close(function() {
+                console.log('database is closed ok');
+                });
+            },
+            function(e) {
+                console.log("ERROR: " + e.message);
+                db.close();
+            });
+        };
+    }
+
+    // Through SQLite query, the Username field is updated in the MQTT table
+    function updateUser(){
+
+        var userName=prompt("Please enter the user name","");
+        if (userName!=null) {
+            var db = window.sqlitePlugin.openDatabase({name: "myanother.db"});
+            db.transaction(function(tx) {
+                tx.executeSql("UPDATE mqtt_table SET user_Name=? where id=1;", [userName], function(tx, res) {
+                len1 = res.rows.length;
+                //alert(userName);
+                });
+            },
+            function() {
+                console.log('transaction ok');
+                db.close(function() {
+                console.log('database is closed ok');
+                });
+            },
+            function(e) {
+                console.log("ERROR: " + e.message);
+                db.close();
+            });
+        };
+    }
+
+    // Through SQLite query, the Password field is updated in the MQTT table
+    function updatePassword(){
+
+        var password1=prompt("Please enter the new password","");
+        if (password1=="") {
+            alert("You must type in a password");
+            exit();
+        };
+
+        if (password1!="" || password1!=null) {
+            var db = window.sqlitePlugin.openDatabase({name: "myanother.db"});
+            db.transaction(function(tx) {
+                tx.executeSql("UPDATE mqtt_table SET pwd=? where id=1;", [password1], function(tx, res) {
+                len1 = res.rows.length;
+                //alert(password1);
+                });
+            },
+            function() {
+                console.log('transaction ok');
+                db.close(function() {
+                console.log('database is closed ok');
+                });
+            },
+            function(e) {
+                console.log("ERROR: " + e.message);
+                db.close();
+            });
+        }
+        else {
+
+            //alert("Passwords do not match. Please try again.");
+            exit();
+        };
+    }
+
+
+</script>
+</body>
+</html>
