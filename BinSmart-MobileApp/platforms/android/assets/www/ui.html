@@ -45,7 +45,7 @@
 </div>
 
 <div class="tabs-striped tabs-top tabs-background-dark tabs-color-light">
-    <div class="tabs">
+    <div class="tabs tabs-icon-top">
         <a class="tab-item " onclick="subscribe()">
             <i class="icon ion-play"></i>
             Start
@@ -62,9 +62,17 @@
 <br>
 <br>
 <br>
+<div class="list card">
 
+    <a href="#" class="item item-icon-left assetive">
+        <i class="icon ion-planet"></i>
+        <h2>Connection Status</h2>
+        <p id="connectionInfo">Currently not reading data</p>
+    </a>
 
-<div id="chartContainer" style="height: 475px; width: 90%;">
+</div>
+
+<div id="chartContainer" style="height: 370px; width: 90%;">
 </div>
 
 <script>
@@ -87,6 +95,7 @@
 			function unsubscribe() {
 				topic = "smartbin/+";
 				clientPublish.unsubscribe(topic);
+				document.getElementById("connectionInfo").innerHTML = "Not reading the data anymore";
 				//alert("unsubcribed from the topic");
 
 			}
@@ -104,6 +113,7 @@
 					console.log("Trying to subscribe");
 					clientPublish.subscribe(TopicToSubscribe);
 					console.log("successfuly subscribed to the topic");
+
 				}
 
 				// called when the client loses its connection
@@ -118,7 +128,8 @@
 				function onMessageArrived(message) {
 					console.log("message received: " + message.payloadString);
 					//document.getElementById("sub").innerHTML = "Received message: " + message.payloadString;
-                    parseSubscribedMessage(message.payloadString);
+					document.getElementById("connectionInfo").innerHTML = "Reading data from the Smart Bins";
+					parseSubscribedMessage(message.payloadString);
 				}
 
 			}
